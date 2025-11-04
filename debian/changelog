@@ -1,3 +1,10 @@
+armesto (0.2.3ubuntu1) jammy; urgency=medium
+
+  [ Ken Gilmer ]
+  * fix: use correct version spec to avoid newer, rustc-incompat dependencies
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Tue, 04 Nov 2025 18:32:24 +0000
+
 armesto (0.2.2ubuntu1) jammy; urgency=medium
 
   [ Khosrow Moossavi ]
