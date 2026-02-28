@@ -3,19 +3,20 @@
 #![warn(missing_docs, clippy::unwrap_used)]
 
 /// Error handler.
-pub mod error;
+mod error;
 
 /// D-Bus handler.
-pub mod dbus;
+mod dbus;
 
 /// Notification manager.
-pub mod notification;
+mod notification;
 
 /// Rofi server
-pub mod rofi;
+mod rofi;
+
+pub use crate::error::{Error, Result};
 
 use crate::dbus::DbusServer;
-use crate::error::Result;
 use crate::rofi::RofiServer;
 use log::{debug, error};
 use notification::Action;
