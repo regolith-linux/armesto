@@ -4,9 +4,6 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-/// Name of the template for rendering the notification message.
-pub const NOTIFICATION_MESSAGE_TEMPLATE: &str = "notification_message_template";
-
 /// Possible urgency levels for the notification.
 #[derive(Clone, Debug, Default, Serialize_repr, Copy, PartialEq)]
 #[repr(u8)]
