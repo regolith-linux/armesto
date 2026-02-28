@@ -1,8 +1,8 @@
-use std::{process};
 use armesto::Config;
-use clap::{Parser};
-use syslog::{Facility, Formatter3164, BasicLogger};
-use log::{error, LevelFilter, debug};
+use clap::Parser;
+use log::{debug, error, LevelFilter};
+use std::process;
+use syslog::{BasicLogger, Facility, Formatter3164};
 
 fn main() {
     let formatter = Formatter3164 {
@@ -13,13 +13,16 @@ fn main() {
     };
 
     let logger = match syslog::unix(formatter) {
-        Err(e) => { println!("unable to connect to syslog: {:?}", e); return; },
+        Err(e) => {
+            println!("unable to connect to syslog: {:?}", e);
+            return;
+        }
         Ok(logger) => logger,
     };
 
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
         .map(|()| log::set_max_level(LevelFilter::Debug))
-        .expect("can set logger");    
+        .expect("can set logger");
 
     let config = Config::parse();
     debug!("Starting armesto with {:?}", config);

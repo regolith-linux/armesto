@@ -8,12 +8,13 @@ use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 pub const NOTIFICATION_MESSAGE_TEMPLATE: &str = "notification_message_template";
 
 /// Possible urgency levels for the notification.
-#[derive(Clone, Debug, Serialize_repr, Copy, PartialEq)]
+#[derive(Clone, Debug, Default, Serialize_repr, Copy, PartialEq)]
 #[repr(u8)]
 pub enum Urgency {
     /// Urgency - low
     Low,
     /// Urgency - normal
+    #[default]
     Normal,
     /// Urgency - high
     Critical,
@@ -36,11 +37,6 @@ impl From<u64> for Urgency {
     }
 }
 
-impl Default for Urgency {
-    fn default() -> Self {
-        Self::Normal
-    }
-}
 /// Representation of a notification.
 ///
 /// See [D-Bus Notify Parameters](https://specifications.freedesktop.org/notification-spec/latest/ar01s09.html)
@@ -143,13 +139,8 @@ impl NotificationStore {
     /// set the urgency of the notification
     pub fn set_urgency(&self, id: u32, target_urgency: Urgency) {
         let mut ds = self.ds_write();
-        
-        let notification = ds
-            .iter_mut()
-            .find(|n| n.id == id);
 
-        if notification.is_some() {
-            let notification = notification.unwrap();
+        if let Some(notification) = ds.iter_mut().find(|n| n.id == id) {
             notification.urgency = target_urgency;
         }
     }
@@ -191,8 +182,7 @@ mod tests {
 
         let binding = unit.items();
         let retrieved_item = binding
-            .iter()
-            .next()
+            .first()
             .expect("Can get added notification from store");
 
         assert_eq!(added_item.id, retrieved_item.id);
@@ -243,7 +233,7 @@ mod tests {
         unit.set_urgency(1, Urgency::Low);
 
         let notifications = unit.items();
-        let n = notifications.iter().next().expect("Has added element");
+        let n = notifications.first().expect("Has added element");
 
         assert_eq!(n.id, 1);
         assert_eq!(n.urgency, Urgency::Low);

@@ -1,5 +1,9 @@
-use std::{os::unix::net::{UnixListener, UnixStream}, io::BufRead, io::{BufReader, BufWriter, Write}};
-use log::{warn, debug, error};
+use log::{debug, error, warn};
+use std::{
+    io::BufRead,
+    io::{BufReader, BufWriter, Error, ErrorKind, Write},
+    os::unix::net::{UnixListener, UnixStream},
+};
 
 use crate::notification::{NotificationStore, Urgency};
 
@@ -27,72 +31,57 @@ pub enum RofiCommand {
 
 impl RofiCommand {
     fn parse(client_request: &str) -> Option<RofiCommand> {
-        let mut token_iter = client_request.split(":").into_iter();
+        let mut token_iter = client_request.split(':');
 
         match token_iter.next() {
-            Some(command) => {
-                match command {
-                    "num" => Some(Self::Count),
-                    "list" => Some(Self::List),
-                    "del" => {
-                        let id = token_iter
-                            .next()?
-                            .parse::<u32>()
-                            .ok()?;
+            Some(command) => match command {
+                "num" => Some(Self::Count),
+                "list" => Some(Self::List),
+                "del" => {
+                    let id = token_iter.next()?.parse::<u32>().ok()?;
 
-                        Some(Self::DeleteOne(id))
-                    },
-                    "dels" => {
-                        let id = token_iter
-                            .next()?
-                            .parse::<u32>()
-                            .ok()?;
-
-                        Some(Self::DeleteSimilar(id))
-                    },
-                    "dela" => {
-                        let app_name = token_iter
-                            .next()?
-                            .trim()
-                            .to_string();
-
-                        Some(Self::DeleteApps(app_name))
-                    },
-                    "saw" => {
-                        let id = token_iter
-                            .next()?
-                            .parse::<u32>()
-                            .ok()?;
-
-                        Some(Self::MarkSeen(id))
-                    },
-                    unrecognized_cmd => {
-                        warn!("unknown command: '{}'", unrecognized_cmd);
-                        None
-                    }
+                    Some(Self::DeleteOne(id))
                 }
+                "dels" => {
+                    let id = token_iter.next()?.parse::<u32>().ok()?;
 
+                    Some(Self::DeleteSimilar(id))
+                }
+                "dela" => {
+                    let app_name = token_iter.next()?.trim().to_string();
+
+                    Some(Self::DeleteApps(app_name))
+                }
+                "saw" => {
+                    let id = token_iter.next()?.parse::<u32>().ok()?;
+
+                    Some(Self::MarkSeen(id))
+                }
+                unrecognized_cmd => {
+                    warn!("unknown command: '{}'", unrecognized_cmd);
+                    None
+                }
             },
-            None => None
+            None => None,
         }
     }
 }
 
-impl  RofiServer {
+impl RofiServer {
     /// Create a new server instance
     pub fn new(socket_path: String, db: NotificationStore) -> RofiServer {
-        return RofiServer { socket_path, db }
+        RofiServer { socket_path, db }
     }
 
     /// Server listens for incoming requests, blocks
     pub fn start(&self) -> std::io::Result<()> {
         debug!("Rofication server binding to path {}", &self.socket_path);
         let listener = UnixListener::bind(&self.socket_path)?;
-    
+
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    self.handle_request(stream);                    
+                    self.handle_request(stream);
                 }
                 Err(err) => {
                     println!("Failed to initialize socket listener: {}", err);
@@ -103,7 +92,7 @@ impl  RofiServer {
         Ok(())
     }
 
-    fn handle_request(&self, stream: UnixStream) {        
+    fn handle_request(&self, stream: UnixStream) {
         let mut client_in = BufReader::new(&stream);
         let mut client_out = BufWriter::new(&stream);
 
@@ -113,33 +102,42 @@ impl  RofiServer {
         let line = line.trim();
         debug!("Rofication client request: '{}'", line);
 
-        match RofiCommand::parse(&line) {
-            Some(command) => self.execute_command(command, &mut client_out),
+        match RofiCommand::parse(line) {
+            Some(command) => {
+                if let Err(err) = self.execute_command(command, &mut client_out) {
+                    error!("Failed to execute command: {}", err);
+                }
+            }
             None => error!("Unable to parse message, no action taken: {}", &line),
         }
     }
 
-    fn execute_command(&self, cmd: RofiCommand, client_out: &mut BufWriter<&UnixStream>) {
+    fn execute_command(
+        &self,
+        cmd: RofiCommand,
+        client_out: &mut BufWriter<&UnixStream>,
+    ) -> std::io::Result<()> {
         match cmd {
-            RofiCommand::Count => {                
-                client_out.write(self.db.count().to_string().as_bytes()).unwrap();
-                client_out.flush().expect("Sending response back to client")
-            },
+            RofiCommand::Count => {
+                client_out.write_all(self.db.count().to_string().as_bytes())?;
+                client_out.flush()?;
+            }
             RofiCommand::List => {
                 let elems = self.db.items();
-                let response = serde_json::to_string(&elems).unwrap();
-                client_out.write(&response.as_bytes()).unwrap();
-                client_out.flush().expect("Sending response back to client")
-            },
+                let response =
+                    serde_json::to_string(&elems).map_err(|err| Error::new(ErrorKind::Other, err))?;
+                client_out.write_all(response.as_bytes())?;
+                client_out.flush()?;
+            }
             RofiCommand::DeleteOne(id) => {
                 self.db.delete(id);
-            },
+            }
             RofiCommand::DeleteApps(app_name) => {
                 self.db.delete_from_app(app_name);
-            },
+            }
             RofiCommand::DeleteSimilar(id) => {
                 let notifications = self.db.items();
-                let source_notification = notifications.iter().find(|n| n.id == id);       
+                let source_notification = notifications.iter().find(|n| n.id == id);
 
                 if let Some(source_notification) = source_notification {
                     let app_name = source_notification.application.clone();
@@ -148,10 +146,11 @@ impl  RofiServer {
                         self.db.delete_from_app(app_name);
                     }
                 }
-            },
+            }
             RofiCommand::MarkSeen(id) => {
                 self.db.set_urgency(id, Urgency::Normal);
             }
         }
+        Ok(())
     }
 }

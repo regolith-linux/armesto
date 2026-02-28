@@ -1,5 +1,5 @@
 use crate::error::{self, Error};
-use crate::notification::{Notification, Action};
+use crate::notification::{Action, Notification};
 use dbus::arg::{RefArg, Variant};
 use dbus::blocking::stdintf::org_freedesktop_dbus::RequestNameReply;
 use dbus::blocking::{Connection, Proxy};
@@ -7,7 +7,7 @@ use dbus::channel::MatchingReceiver;
 use dbus::message::MatchRule;
 use dbus::MethodErr;
 use dbus_crossroads::Crossroads;
-use log::{trace, debug};
+use log::debug;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::Sender;
@@ -31,6 +31,7 @@ const SERVER_CAPABILITIES: [&str; 2] = ["actions", "body"];
 
 mod dbus_server {
     #![allow(clippy::too_many_arguments)]
+    #![allow(dead_code)]
     include!(concat!(env!("OUT_DIR"), "/introspection.rs"));
 }
 
@@ -75,7 +76,7 @@ impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
             id,
             summary,
             body,
-            application,            
+            application,
             icon,
             urgency: hints
                 .get("urgency")
@@ -152,7 +153,8 @@ impl DbusServer {
         sender: Sender<Action>,
         timeout: Duration,
     ) -> Result<(), Error> {
-        let reply = self.connection
+        let reply = self
+            .connection
             .request_name(NOTIFICATION_INTERFACE, false, true, false)?;
 
         if reply != RequestNameReply::PrimaryOwner {
@@ -240,7 +242,7 @@ impl DbusClient {
             Duration::from_millis(1000),
             &self.connection,
         );
-        proxy.method_call(
+        proxy.method_call::<(), _, _, _>(
             NOTIFICATION_INTERFACE,
             "Notify",
             (
@@ -271,7 +273,7 @@ impl DbusClient {
             timeout,
             &self.connection,
         );
-        proxy.method_call(NOTIFICATION_INTERFACE, "CloseNotification", (id,))?;
+        proxy.method_call::<(), _, _, _>(NOTIFICATION_INTERFACE, "CloseNotification", (id,))?;
         Ok(())
     }
 }
