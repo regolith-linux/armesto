@@ -40,6 +40,10 @@ pub struct Config {
 
 /// Service entry-point
 pub fn run(config: Config) -> Result<()> {
+    let Config {
+        socket_path,
+        dbus_poll_timeout,
+    } = config;
     let dbus_server = DbusServer::init()?;
     let db = NotificationStore::init();
     let (dbus_sender, receiver) = mpsc::channel();
@@ -50,7 +54,7 @@ pub fn run(config: Config) -> Result<()> {
         .spawn(move || {
             debug!("registering D-Bus server");
             let dbus_sender2 = dbus_sender.clone();
-            let duration = Duration::from_millis(config.dbus_poll_timeout.into());
+            let duration = Duration::from_millis(dbus_poll_timeout.into());
             if let Err(err) = dbus_server.register_notification_handler(dbus_sender, duration) {
                 if let Err(send_err) = dbus_sender2.send(Action::Shutdown(err)) {
                     error!("failed to send dbus shutdown action: {}", send_err);
@@ -63,8 +67,7 @@ pub fn run(config: Config) -> Result<()> {
         .name("rofication".to_string())
         .spawn(move || {
             debug!("starting rofication server");
-            let rofi_server =
-                RofiServer::new("/tmp/rofi_notification_daemon".to_string(), db_clone);
+            let rofi_server = RofiServer::new(socket_path, db_clone);
             if let Err(err) = rofi_server.start() {
                 if let Err(send_err) = rofi_sender.send(Action::Shutdown(err.into())) {
                     error!("failed to send rofi shutdown action: {}", send_err);
