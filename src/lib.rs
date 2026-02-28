@@ -17,7 +17,6 @@ pub mod rofi;
 use crate::dbus::DbusServer;
 use crate::error::Result;
 use crate::rofi::RofiServer;
-use clap::Parser;
 use log::{debug, error};
 use notification::Action;
 use notification::NotificationStore;
@@ -26,16 +25,22 @@ use std::thread;
 use std::time::Duration;
 
 /// Startup configuration
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[derive(Debug, Clone)]
 pub struct Config {
     /// Local path to file representing domain socket
-    #[arg(short, long, default_value = "/tmp/armesto")]
     pub socket_path: String,
 
     /// Duration to wait for incoming d-bus messages
-    #[arg(short, long, default_value_t = 1000)]
     pub dbus_poll_timeout: u16,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            socket_path: "/tmp/armesto".to_string(),
+            dbus_poll_timeout: 1000,
+        }
+    }
 }
 
 /// Service entry-point

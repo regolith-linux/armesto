@@ -4,6 +4,18 @@ use log::{debug, error, LevelFilter};
 use std::process;
 use syslog::{BasicLogger, Facility, Formatter3164};
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct CliConfig {
+    /// Local path to file representing domain socket
+    #[arg(short, long, default_value = "/tmp/armesto")]
+    socket_path: String,
+
+    /// Duration to wait for incoming d-bus messages
+    #[arg(short, long, default_value_t = 1000)]
+    dbus_poll_timeout: u16,
+}
+
 fn main() {
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
@@ -24,7 +36,11 @@ fn main() {
         .map(|()| log::set_max_level(LevelFilter::Debug))
         .expect("can set logger");
 
-    let config = Config::parse();
+    let cli = CliConfig::parse();
+    let config = Config {
+        socket_path: cli.socket_path,
+        dbus_poll_timeout: cli.dbus_poll_timeout,
+    };
     debug!("Starting armesto with {:?}", config);
 
     match armesto::run(config) {
