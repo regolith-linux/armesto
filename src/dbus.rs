@@ -216,9 +216,6 @@ pub struct DbusClient {
     connection: Connection,
 }
 
-unsafe impl Send for DbusClient {}
-unsafe impl Sync for DbusClient {}
-
 impl DbusClient {
     /// Initializes the D-Bus controller.
     pub fn init() -> error::Result<Self> {
