@@ -97,7 +97,10 @@ impl RofiServer {
         let mut client_out = BufWriter::new(&stream);
 
         let mut line = String::new();
-        let _ = client_in.read_line(&mut line).expect("unable to read");
+        if let Err(err) = client_in.read_line(&mut line) {
+            error!("Unable to read client request: {}", err);
+            return;
+        }
 
         let line = line.trim();
         debug!("Rofication client request: '{}'", line);

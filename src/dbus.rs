@@ -7,7 +7,7 @@ use dbus::channel::MatchingReceiver;
 use dbus::message::MatchRule;
 use dbus::MethodErr;
 use dbus_crossroads::Crossroads;
-use log::debug;
+use log::{debug, error};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::Sender;
@@ -196,9 +196,9 @@ impl DbusServer {
         self.connection.start_receive(
             MatchRule::new_method_call(),
             Box::new(move |message, connection| {
-                self.crossroads
-                    .handle_message(message, connection)
-                    .expect("failed to handle message");
+                if let Err(err) = self.crossroads.handle_message(message, connection) {
+                    error!("failed to handle dbus message: {:?}", err);
+                }
                 true
             }),
         );
