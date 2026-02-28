@@ -86,9 +86,6 @@ pub fn run(config: Config) -> Result<()> {
             Action::Show(notification) => {
                 db.add(notification);
             }
-            Action::ShowLast => {
-                debug!("showing the last notification");
-            }
             Action::Close(id) => {
                 if let Some(id) = id {
                     debug!("closing notification: {}", id);

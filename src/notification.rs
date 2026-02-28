@@ -64,8 +64,6 @@ pub struct Notification {
 pub enum Action {
     /// Show a notification event from dbus
     Show(Notification),
-    /// Show the last notification from dbus
-    ShowLast,
     /// Close a notification event from dbus
     Close(Option<u32>),
     /// Close all the notifications event from dbus
