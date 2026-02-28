@@ -136,7 +136,7 @@ impl RofiServer {
                 self.db.delete(id);
             }
             RofiCommand::DeleteApps(app_name) => {
-                self.db.delete_from_app(app_name);
+                self.db.delete_from_app(&app_name);
             }
             RofiCommand::DeleteSimilar(id) => {
                 let notifications = self.db.items();
@@ -146,7 +146,7 @@ impl RofiServer {
                     let app_name = source_notification.application.clone();
 
                     if !app_name.is_empty() {
-                        self.db.delete_from_app(app_name);
+                        self.db.delete_from_app(&app_name);
                     }
                 }
             }

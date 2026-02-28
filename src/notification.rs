@@ -91,7 +91,7 @@ impl Clone for NotificationStore {
 
 impl NotificationStore {
     /// Initializes the notification db
-    pub fn init() -> Self {
+    pub fn new() -> Self {
         Self {
             inner: Arc::new(RwLock::new(Vec::new())),
         }
@@ -127,7 +127,7 @@ impl NotificationStore {
     }
 
     /// Marks the given notification as read.
-    pub fn delete_from_app(&self, app_name: String) {
+    pub fn delete_from_app(&self, app_name: &str) {
         let mut ds = self.ds_write();
 
         ds.retain(|e| e.application != app_name);
@@ -151,6 +151,12 @@ impl NotificationStore {
     }
 }
 
+impl Default for NotificationStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -158,7 +164,7 @@ mod tests {
 
     #[test]
     fn notification_store_init() {
-        let unit = NotificationStore::init();
+        let unit = NotificationStore::new();
 
         assert_eq!(
             unit.count(),
@@ -204,14 +210,14 @@ mod tests {
     fn notification_store_delete_by_app() {
         let (unit, _) = add_single_item();
 
-        unit.delete_from_app("invalid_app_name".to_string()); // invalid app name
+        unit.delete_from_app("invalid_app_name"); // invalid app name
         assert_eq!(
             unit.count(),
             1,
             "no change after attempt to delete invalid id"
         );
 
-        unit.delete_from_app("test-app".to_string());
+        unit.delete_from_app("test-app");
         assert_eq!(unit.count(), 0, "count down by own after deleting valid id");
     }
 
@@ -237,7 +243,7 @@ mod tests {
     }
 
     fn add_single_item() -> (NotificationStore, Notification) {
-        let unit = NotificationStore::init();
+        let unit = NotificationStore::new();
 
         let test_notification: Notification = Notification {
             id: 1,

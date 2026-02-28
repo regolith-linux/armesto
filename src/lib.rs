@@ -51,7 +51,7 @@ pub fn run(config: Config) -> Result<()> {
         dbus_poll_timeout,
     } = config;
     let dbus_server = DbusServer::init()?;
-    let db = NotificationStore::init();
+    let db = NotificationStore::new();
     let (dbus_sender, receiver) = mpsc::channel();
     let rofi_sender = dbus_sender.clone();
 
