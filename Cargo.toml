@@ -1,31 +1,33 @@
 [package]
-name = "armesto"
-version = "0.0.1"
-description = "Another rofication daemon"
+name = "armesto_notify_backend"
+version = "0.1.0"
+description = "SQLite-backed Linux desktop notification backend"
 authors = ["Ken Gilmer <kgilmer@gmail.com>"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/kgilmer/armesto"
-repository = "https://github.com/kgilmer/armesto"
-keywords = ["notification", "daemon", "dbus", "notify"]
-categories = []
-include = ["src/**/*", "dbus/*", "build.rs", "Cargo.*", "LICENSE-*", "*.md"]
 edition = "2021"
 rust-version = "1.64"
 
+[lib]
+name = "armesto_notify_backend"
+path = "src/lib.rs"
+
+[[bin]]
+name = "armesto-server"
+path = "src/bin/armesto-server.rs"
+
+[[bin]]
+name = "armesto"
+path = "src/bin/armesto.rs"
+
 [dependencies]
-dbus = "0.9.7"
-dbus-crossroads = "0.5.2"
-thiserror = "1.0.40"
+clap = { version = "4.3.10", features = ["derive"] }
 serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.96"
-serde_repr = "0.1"
-log = "0.4"
-syslog = "6.1"
-clap = { version = "4.3.10", features = ["derive"] }
-
-[build-dependencies]
-dbus-codegen = "0.10.0"
+thiserror = "1.0.40"
+rusqlite = { version = "0.37.0", features = ["bundled"] }
+dbus = "0.9.7"
+dbus-crossroads = "0.5.2"
 
 [profile.dev]
 opt-level = 0
@@ -42,7 +44,3 @@ debug = false
 panic = "unwind"
 lto = true
 codegen-units = 1
-
-[profile.bench]
-opt-level = 3
-debug = false
