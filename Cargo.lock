@@ -53,7 +53,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "armesto_notify_backend"
+name = "armesto"
 version = "0.1.0"
 dependencies = [
  "clap",

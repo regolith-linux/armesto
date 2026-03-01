@@ -10,8 +10,8 @@ use crate::model::{ChangeEvent, NewNotification, UpdateNotification, Urgency};
 use crate::repository::SqliteRepository;
 use crate::rofi::RofiServer;
 use dbus::arg::{PropMap, RefArg};
-use dbus::blocking::Connection;
 use dbus::blocking::stdintf::org_freedesktop_dbus::RequestNameReply;
+use dbus::blocking::Connection;
 use dbus::channel::MatchingReceiver;
 use dbus::message::MatchRule;
 use dbus::Message;
@@ -114,9 +114,14 @@ fn register_notification_interface(
 
         let repo_close = repository.clone();
         let emitted_close = Arc::clone(&last_emitted);
-        builder.method("CloseNotification", ("id",), (), move |ctx, _, (id,): (u32,)| {
-            handle_close_notification(ctx, &repo_close, &emitted_close, id)
-        });
+        builder.method(
+            "CloseNotification",
+            ("id",),
+            (),
+            move |ctx, _, (id,): (u32,)| {
+                handle_close_notification(ctx, &repo_close, &emitted_close, id)
+            },
+        );
 
         builder.method("GetCapabilities", (), ("caps",), |_, _, ()| {
             Ok((vec!["actions".to_string(), "body".to_string()],))
@@ -145,16 +150,7 @@ fn handle_notify(
     ctx: &mut Context,
     repository: &SqliteRepository,
     last_emitted: &Arc<Mutex<u64>>,
-    (
-        app_name,
-        replaces_id,
-        icon,
-        summary,
-        body,
-        actions,
-        hints,
-        _expire_timeout,
-    ): NotifyArgs,
+    (app_name, replaces_id, icon, summary, body, actions, hints, _expire_timeout): NotifyArgs,
 ) -> std::result::Result<(u32,), MethodErr> {
     let urgency = map_urgency_hint(&hints);
     let hints = map_hints(&hints);
@@ -172,8 +168,11 @@ fn handle_notify(
 
     emit_pending_change_signals(ctx, repository, last_emitted).map_err(to_method_err)?;
 
-    let reply_id = u32::try_from(id)
-        .map_err(|_| MethodErr::failed(&format!("notification id {id} cannot be represented as u32")))?;
+    let reply_id = u32::try_from(id).map_err(|_| {
+        MethodErr::failed(&format!(
+            "notification id {id} cannot be represented as u32"
+        ))
+    })?;
     Ok((reply_id,))
 }
 

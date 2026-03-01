@@ -1,12 +1,12 @@
 //! Command-line entrypoint for running the notification daemon.
 
-use armesto_notify_backend::{DatabaseConfig, NotificationServer, ServerConfig};
+use armesto::{DatabaseConfig, NotificationServer, ServerConfig};
 use clap::Parser;
 use std::process;
 use std::time::Duration;
 
 #[derive(Debug, Parser)]
-#[command(author, version, about = "SQLite-backed notification daemon")]
+#[command(author, version, about = "DB-backed notification daemon")]
 struct Cli {
     /// Optional explicit D-Bus bus address.
     #[arg(long)]

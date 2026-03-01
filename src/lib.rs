@@ -1,6 +1,6 @@
 #![warn(missing_docs, clippy::unwrap_used)]
 
-//! SQLite-backed Linux desktop notification backend primitives.
+//! DB-backed Linux desktop notification backend primitives.
 
 mod client;
 mod config;

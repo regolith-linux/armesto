@@ -125,7 +125,6 @@ impl ChangeKind {
             Self::CloseAll => "close_all",
         }
     }
-
 }
 
 impl FromStr for ChangeKind {

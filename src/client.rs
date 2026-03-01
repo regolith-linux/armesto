@@ -189,15 +189,18 @@ fn install_change_match(
                 }
             }
             Err(_) => {
-                let parsed_kind = signal_kind.parse::<ChangeKind>().ok().map(|kind| ChangeEvent {
-                    change_id: signal_change_id,
-                    kind,
-                    notification_id: if signal_notification_id == 0 {
-                        None
-                    } else {
-                        Some(signal_notification_id)
-                    },
-                });
+                let parsed_kind = signal_kind
+                    .parse::<ChangeKind>()
+                    .ok()
+                    .map(|kind| ChangeEvent {
+                        change_id: signal_change_id,
+                        kind,
+                        notification_id: if signal_notification_id == 0 {
+                            None
+                        } else {
+                            Some(signal_notification_id)
+                        },
+                    });
 
                 if let Some(change) = parsed_kind {
                     last_seen = change.change_id;

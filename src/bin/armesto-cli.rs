@@ -1,6 +1,7 @@
 //! Command-line client for interacting with the notification backend.
+//!
 
-use armesto_notify_backend::{
+use armesto::{
     ClientConfig, DatabaseConfig, Error, ListQuery, NewNotification, NotificationStatus,
     NotifyClient, UpdateNotification, Urgency,
 };
@@ -92,7 +93,7 @@ fn main() {
     }
 }
 
-fn run_command(client: &NotifyClient, command: Command) -> armesto_notify_backend::Result<()> {
+fn run_command(client: &NotifyClient, command: Command) -> armesto::Result<()> {
     match command {
         Command::List { status, app, limit } => {
             let query = ListQuery {
@@ -161,7 +162,7 @@ fn run_command(client: &NotifyClient, command: Command) -> armesto_notify_backen
     Ok(())
 }
 
-fn parse_status(input: Option<&str>) -> armesto_notify_backend::Result<Option<NotificationStatus>> {
+fn parse_status(input: Option<&str>) -> armesto::Result<Option<NotificationStatus>> {
     match input {
         None => Ok(None),
         Some("active") => Ok(Some(NotificationStatus::Active)),
@@ -172,7 +173,7 @@ fn parse_status(input: Option<&str>) -> armesto_notify_backend::Result<Option<No
     }
 }
 
-fn parse_urgency(level: u8) -> armesto_notify_backend::Result<Urgency> {
+fn parse_urgency(level: u8) -> armesto::Result<Urgency> {
     match level {
         0 => Ok(Urgency::Low),
         1 => Ok(Urgency::Normal),
