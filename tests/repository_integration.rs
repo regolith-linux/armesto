@@ -1,6 +1,6 @@
 //! Integration coverage for SQLite repository CRUD and query behavior.
 
-use armesto_notify_backend::{
+use armesto::{
     ClientConfig, DatabaseConfig, ListQuery, NewNotification, NotificationStatus, NotifyClient,
     UpdateNotification, Urgency,
 };

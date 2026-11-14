@@ -1,6 +1,6 @@
 //! Integration coverage for D-Bus notification behavior and change signals.
 
-use armesto_notify_backend::{
+use armesto::{
     ChangeKind, ClientConfig, DatabaseConfig, NewNotification, NotificationServer, NotifyClient,
     ServerConfig, Urgency,
 };
